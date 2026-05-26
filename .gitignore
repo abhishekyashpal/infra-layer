@@ -1,0 +1,40 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Helm
+Chart.lock
+/charts/
+
+# Kubernetes
+kubeconfig
+.kube/
+
+# AWS
+.aws/
+*.pem
+
+# Local env files
+.env
+.env.local
+*.local.yaml
+
+# Secrets
+secrets/
+*-secret*.yaml
+
+# Temporary files
+*.tmp
+*.bak

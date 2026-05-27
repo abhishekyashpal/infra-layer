@@ -1,2 +1,17 @@
-- name: Install k3s
-  shell: curl -sfL https://get.k3s.io | sh -
+# roles/k3s/tasks/main.yml
+
+- name: Install k3s (master node)
+  shell: |
+    curl -sfL https://get.k3s.io | sh -
+  when: inventory_hostname in groups['master']
+
+- name: Get node token
+  slurp:
+    src: /var/lib/rancher/k3s/server/node-token
+  register: token
+  when: inventory_hostname in groups['master']
+
+- name: Join worker nodes
+  shell: |
+    curl -sfL https://get.k3s.io | K3S_URL=https://{{ hostvars[groups['master'][0]].ansible_host }}:6443 K3S_TOKEN={{ hostvars[groups['master'][0]].token.content | b64decode }} sh -
+  when: inventory_hostname in groups['workers']

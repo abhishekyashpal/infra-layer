@@ -1,0 +1,12 @@
+- name: Full server setup
+  hosts: all
+  become: true
+
+  roles:
+    - argocd
+    - common
+    - docker
+    - ingress
+    - k3s
+    - monitoring
+    - security

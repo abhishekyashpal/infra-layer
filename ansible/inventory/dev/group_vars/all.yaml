@@ -1,0 +1,16 @@
+---
+cluster_name: development-cluster
+
+timezone: Asia/Kolkata
+
+k3s_version: v1.30.0+k3s1
+
+grafana_domain: grafana.example.com
+argocd_domain: argocd.example.com
+
+enable_monitoring: true
+enable_ingress: true
+enable_argocd: true
+
+docker_users:
+  - ubuntu

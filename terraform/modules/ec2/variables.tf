@@ -3,6 +3,11 @@ variable "instance_type" {}
 variable "key_name" {}
 variable "subnet_id" {}
 
+variable "associate_public_ip_address" {
+  type    = bool
+  default = true
+}
+
 variable "security_group_ids" {
   type = list(string)
 }

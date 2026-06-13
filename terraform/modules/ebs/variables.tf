@@ -1,4 +1,4 @@
-variable "az" {}
+variable "availability_zone" {}
 variable "size" {
   type = number
 }

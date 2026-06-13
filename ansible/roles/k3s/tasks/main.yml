@@ -1,17 +1,15 @@
-# roles/k3s/tasks/main.yml
-
-- name: Install k3s (master node)
+- name: Install k3s on single server
   shell: |
-    curl -sfL https://get.k3s.io | sh -
-  when: inventory_hostname in groups['master']
+    curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="{{ k3s_version }}" sh -s - server
+  args:
+    creates: /usr/local/bin/k3s
 
-- name: Get node token
-  slurp:
-    src: /var/lib/rancher/k3s/server/node-token
-  register: token
-  when: inventory_hostname in groups['master']
-
-- name: Join worker nodes
-  shell: |
-    curl -sfL https://get.k3s.io | K3S_URL=https://{{ hostvars[groups['master'][0]].ansible_host }}:6443 K3S_TOKEN={{ hostvars[groups['master'][0]].token.content | b64decode }} sh -
-  when: inventory_hostname in groups['workers']
+- name: Wait for k3s to be ready
+  command: kubectl get nodes
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  register: k3s_ready
+  until: k3s_ready.rc == 0
+  retries: 12
+  delay: 10
+  changed_when: false

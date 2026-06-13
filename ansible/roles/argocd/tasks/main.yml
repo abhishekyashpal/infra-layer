@@ -1,9 +1,18 @@
 - name: Create argocd namespace
-  shell: kubectl create namespace argocd || true
+  command: kubectl create namespace argocd
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  register: argocd_namespace
+  failed_when: argocd_namespace.rc != 0 and 'AlreadyExists' not in argocd_namespace.stderr
+  changed_when: argocd_namespace.rc == 0
 
 - name: Install ArgoCD
-  shell: |
-    kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+  command: kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
 
 - name: Wait for ArgoCD server to be ready
-  shell: kubectl rollout status deployment argocd-server -n argocd
+  command: kubectl rollout status deployment/argocd-server -n argocd --timeout=600s
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  changed_when: false

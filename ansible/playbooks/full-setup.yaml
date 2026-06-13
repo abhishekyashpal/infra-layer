@@ -3,10 +3,13 @@
   become: true
 
   roles:
-    - argocd
-    - common
-    - docker
-    - ingress
-    - k3s
-    - monitoring
-    - security
+    - role: common
+    - role: security
+    - role: docker
+    - role: k3s
+    - role: ingress
+      when: enable_ingress | default(true)
+    - role: argocd
+      when: enable_argocd | default(true)
+    - role: monitoring
+      when: enable_monitoring | default(true)

@@ -3,7 +3,7 @@ module "sg" {
 
   name        = "dev-sg"
   description = "Dev security group"
-  vpc_id      = "vpc-xxxx"
+  vpc_id      = var.vpc_id
 
   tags = {
     Env = "dev"
@@ -78,6 +78,22 @@ module "ebs" {
 
   tags = {
     Env = "dev"
+  }
+}
+
+resource "null_resource" "ansible_provisioner" {
+  count = var.run_ansible_provisioner ? 1 : 0
+
+  depends_on = [module.ec2, module.ebs]
+
+  triggers = {
+    instance_id = module.ec2.instance_id
+    public_ip   = module.ec2.public_ip
+  }
+
+  provisioner "local-exec" {
+    command     = "bash \"${path.module}/../../scripts/wait-and-ansible.sh\" \"${module.ec2.public_ip}\" \"${var.ssh_private_key_path}\""
+    interpreter = ["bash", "-c"]
   }
 }
 

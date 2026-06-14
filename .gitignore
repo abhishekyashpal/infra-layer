@@ -39,6 +39,8 @@ kubeconfig
 # Secrets
 secrets/
 *-secret*.yaml
+ansible/.vault_pass
+.vault_pass
 
 # Temporary files
 *.tmp

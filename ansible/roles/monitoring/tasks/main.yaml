@@ -22,6 +22,8 @@
   shell: |
     helm upgrade --install monitoring prometheus-community/kube-prometheus-stack \
       --namespace monitoring \
-      --create-namespace
+      --create-namespace \
+      {% if grafana_admin_password is defined %}--set-string grafana.adminPassword="{{ grafana_admin_password }}"{% endif %}
   environment:
     KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  no_log: true

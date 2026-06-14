@@ -31,10 +31,18 @@ if [[ -f "inventory/dev/group_vars/secrets.yaml" ]]; then
   EXTRA_VARS+=(-e "@inventory/dev/group_vars/secrets.yaml")
 fi
 
+VAULT_ARGS=()
+if [[ -f "${ANSIBLE_DIR}/.vault_pass" ]]; then
+  VAULT_ARGS=(--vault-password-file "${ANSIBLE_DIR}/.vault_pass")
+elif [[ -n "${ANSIBLE_VAULT_PASSWORD_FILE:-}" ]]; then
+  VAULT_ARGS=(--vault-password-file "${ANSIBLE_VAULT_PASSWORD_FILE}")
+fi
+
 cd "${ANSIBLE_DIR}"
 ansible-playbook \
   -i "${PUBLIC_IP}," \
   -u ubuntu \
   --private-key "${SSH_KEY_EXPANDED}" \
+  "${VAULT_ARGS[@]}" \
   "${EXTRA_VARS[@]}" \
   playbooks/full-setup.yaml

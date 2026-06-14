@@ -7,9 +7,32 @@
   changed_when: argocd_namespace.rc == 0
 
 - name: Install ArgoCD
-  command: kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+  command: helm install argocd argo/argo-cd -n argocd --create-namespace
   environment:
     KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+
+- name: Generate bcrypt hash for ArgoCD admin password
+  shell: |
+    python3 - <<'PY'
+    import crypt, os
+    pw = os.environ['ARGOCD_ADMIN_PASSWORD']
+    print(crypt.crypt(pw, crypt.mksalt(crypt.METHOD_BCRYPT)))
+    PY
+  environment:
+    ARGOCD_ADMIN_PASSWORD: "{{ argocd_admin_password }}"
+  register: argocd_admin_password_hash
+  changed_when: false
+  no_log: true
+  when: argocd_admin_password is defined
+
+- name: Patch ArgoCD admin secret with configured password
+  shell: |
+    kubectl -n argocd patch secret argocd-secret --type=json -p \
+      '[{"op":"replace","path":"/data/admin.password","value":"{{ argocd_admin_password_hash.stdout | b64encode }}"}]'
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  no_log: true
+  when: argocd_admin_password is defined
 
 - name: Wait for ArgoCD server to be ready
   command: kubectl rollout status deployment/argocd-server -n argocd --timeout=600s

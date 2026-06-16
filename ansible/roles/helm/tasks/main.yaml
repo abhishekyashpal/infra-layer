@@ -1,0 +1,11 @@
+# ansible/roles/helm/tasks/main.yml
+
+- name: Check if Helm is already installed
+  command: helm version
+  register: helm_check
+  failed_when: false
+  changed_when: false
+
+- name: Install Helm
+  shell: curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+  when: helm_check.rc != 0

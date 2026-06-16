@@ -1,3 +1,25 @@
+- name: Add ArgoCD Helm repo
+  command: helm repo add argo https://argoproj.github.io/argo-helm
+  register: repo_add
+  failed_when: repo_add.rc != 0 and 'already exists' not in repo_add.stderr
+  changed_when: "'already exists' not in repo_add.stderr"
+
+- name: Update Helm repos
+  command: helm repo update
+  changed_when: false
+
+- name: Remove previous raw-manifest ArgoCD install
+  shell: |
+    kubectl delete namespace argocd --ignore-not-found=true
+    kubectl delete crd \
+      applications.argoproj.io \
+      applicationsets.argoproj.io \
+      appprojects.argoproj.io \
+      --ignore-not-found=true
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  changed_when: false
+
 - name: Create argocd namespace
   command: kubectl create namespace argocd
   environment:
@@ -11,13 +33,15 @@
   environment:
     KUBECONFIG: /etc/rancher/k3s/k3s.yaml
 
+- name: Wait for ArgoCD server to be ready
+  command: kubectl rollout status deployment/argocd-server -n argocd --timeout=600s
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  changed_when: false
+
 - name: Generate bcrypt hash for ArgoCD admin password
   shell: |
-    python3 - <<'PY'
-    import crypt, os
-    pw = os.environ['ARGOCD_ADMIN_PASSWORD']
-    print(crypt.crypt(pw, crypt.mksalt(crypt.METHOD_BCRYPT)))
-    PY
+    python3 -c "import bcrypt, os; pw = os.environ['ARGOCD_ADMIN_PASSWORD'].encode(); print(bcrypt.hashpw(pw, bcrypt.gensalt()).decode())"
   environment:
     ARGOCD_ADMIN_PASSWORD: "{{ argocd_admin_password }}"
   register: argocd_admin_password_hash
@@ -34,8 +58,4 @@
   no_log: true
   when: argocd_admin_password is defined
 
-- name: Wait for ArgoCD server to be ready
-  command: kubectl rollout status deployment/argocd-server -n argocd --timeout=600s
-  environment:
-    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
-  changed_when: false
+

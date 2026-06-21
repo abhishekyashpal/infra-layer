@@ -10,15 +10,16 @@
 
 - name: Remove previous raw-manifest ArgoCD install
   shell: |
-    kubectl delete namespace argocd --ignore-not-found=true
+    kubectl delete namespace argocd --ignore-not-found=true --wait=false
     kubectl delete crd \
       applications.argoproj.io \
       applicationsets.argoproj.io \
       appprojects.argoproj.io \
-      --ignore-not-found=true
+      --ignore-not-found=true --wait=false
   environment:
     KUBECONFIG: /etc/rancher/k3s/k3s.yaml
   changed_when: false
+  when: cleanup_previous_argocd_install | default(false)
 
 - name: Create argocd namespace
   command: kubectl create namespace argocd
@@ -28,13 +29,29 @@
   failed_when: argocd_namespace.rc != 0 and 'AlreadyExists' not in argocd_namespace.stderr
   changed_when: argocd_namespace.rc == 0
 
+- name: Render ArgoCD Helm values
+  template:
+    src: argocd-values.yaml.j2
+    dest: /tmp/argocd-values.yaml
+    mode: "0644"
+
 - name: Install ArgoCD
-  command: helm upgrade --install argocd argo/argo-cd -n argocd --create-namespace
+  command: >
+    helm upgrade --install argocd argo/argo-cd
+    -n argocd
+    --create-namespace
+    -f /tmp/argocd-values.yaml
   environment:
     KUBECONFIG: /etc/rancher/k3s/k3s.yaml
 
 - name: Wait for ArgoCD server to be ready
   command: kubectl rollout status deployment/argocd-server -n argocd --timeout=600s
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  changed_when: false
+
+- name: Wait for ArgoCD Application CRD to be ready
+  command: kubectl wait --for=condition=Established crd/applications.argoproj.io --timeout=300s
   environment:
     KUBECONFIG: /etc/rancher/k3s/k3s.yaml
   changed_when: false

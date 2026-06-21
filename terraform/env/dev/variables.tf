@@ -5,7 +5,7 @@ variable "ami_id" {}
 variable "ssh_private_key_path" {
   description = "Path to the SSH private key used for Ansible provisioning"
   type        = string
-  default     = "~/.ssh/dev-key.pem"
+  default     = "~/.ssh/dev-server.pem"
 }
 
 variable "run_ansible_provisioner" {

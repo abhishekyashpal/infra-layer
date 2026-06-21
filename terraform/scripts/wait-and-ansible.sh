@@ -22,6 +22,8 @@ for i in $(seq 1 30); do
 done
 
 export ANSIBLE_HOST_KEY_CHECKING=False
+export ANSIBLE_CONFIG="${REPO_ROOT}/ansible.cfg"
+export ANSIBLE_ROLES_PATH="${REPO_ROOT}/ansible/roles"
 
 EXTRA_VARS=(
   -e "@inventory/dev/group_vars/all/main.yaml"

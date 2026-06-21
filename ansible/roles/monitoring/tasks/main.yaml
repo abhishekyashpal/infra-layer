@@ -27,3 +27,22 @@
   environment:
     KUBECONFIG: /etc/rancher/k3s/k3s.yaml
   no_log: true
+
+- name: Render Grafana ingress
+  template:
+    src: grafana-ingress.yaml.j2
+    dest: /tmp/grafana-ingress.yaml
+    mode: "0644"
+  when:
+    - enable_ingress | default(true)
+    - grafana_domain is defined
+    - grafana_domain | length > 0
+
+- name: Create Grafana ingress
+  command: kubectl apply -f /tmp/grafana-ingress.yaml
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  when:
+    - enable_ingress | default(true)
+    - grafana_domain is defined
+    - grafana_domain | length > 0

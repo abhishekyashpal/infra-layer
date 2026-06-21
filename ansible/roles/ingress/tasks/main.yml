@@ -1,6 +1,31 @@
-- name: Install ingress-nginx for bare metal
-  shell: |
-    kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.11.3/deploy/static/provider/baremetal/deploy.yaml
+- name: Add ingress-nginx Helm repo
+  command: helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+  register: ingress_repo_add
+  failed_when: ingress_repo_add.rc != 0 and 'already exists' not in ingress_repo_add.stderr
+  changed_when: "'already exists' not in ingress_repo_add.stderr"
+
+- name: Update Helm repos
+  command: helm repo update
+  changed_when: false
+
+- name: Create ingress-nginx namespace
+  command: kubectl create namespace ingress-nginx
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  register: ingress_namespace
+  failed_when: ingress_namespace.rc != 0 and 'AlreadyExists' not in ingress_namespace.stderr
+  changed_when: ingress_namespace.rc == 0
+
+- name: Install ingress-nginx without NodePort
+  command: >
+    helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx
+    --namespace ingress-nginx
+    --set controller.hostNetwork=true
+    --set controller.dnsPolicy=ClusterFirstWithHostNet
+    --set controller.service.type=ClusterIP
+    --set controller.ingressClassResource.default=true
+    --set controller.admissionWebhooks.patch.hostNetwork=true
+    --set controller.admissionWebhooks.patch.dnsPolicy=ClusterFirstWithHostNet
   environment:
     KUBECONFIG: /etc/rancher/k3s/k3s.yaml
 

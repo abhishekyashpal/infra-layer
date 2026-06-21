@@ -1,6 +1,6 @@
 - name: Install k3s on single server
   shell: |
-    curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="{{ k3s_version }}" sh -s - server
+    curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="{{ k3s_version }}" sh -s - server --disable traefik --disable servicelb
   args:
     creates: /usr/local/bin/k3s
 

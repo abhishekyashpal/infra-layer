@@ -24,11 +24,11 @@ done
 export ANSIBLE_HOST_KEY_CHECKING=False
 
 EXTRA_VARS=(
-  -e "@inventory/dev/group_vars/all.yaml"
+  -e "@inventory/dev/group_vars/all/main.yaml"
 )
 
-if [[ -f "inventory/dev/group_vars/secrets.yaml" ]]; then
-  EXTRA_VARS+=(-e "@inventory/dev/group_vars/secrets.yaml")
+if [[ -f "inventory/dev/group_vars/all/secrets.yaml" ]]; then
+  EXTRA_VARS+=(-e "@inventory/dev/group_vars/all/secrets.yaml")
 fi
 
 VAULT_ARGS=()

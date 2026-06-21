@@ -7,8 +7,8 @@
     - role: security
     - role: docker
     - role: k3s
-    - role: ingress
     - role: helm
+    - role: ingress
       when: enable_ingress | default(true)
     - role: argocd
       when: enable_argocd | default(true)

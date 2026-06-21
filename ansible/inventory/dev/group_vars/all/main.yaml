@@ -12,5 +12,20 @@ enable_monitoring: true
 enable_ingress: true
 enable_argocd: true
 
+# Fill these in to let ArgoCD pull and sync your GitOps repo automatically.
+# Example:
+# gitops_repo_url: https://github.com/abhishekyashpal/api-gitops.git
+# gitops_repo_target_revision: master
+# gitops_repo_path: manifests/dev
+gitops_repo_url: https://github.com/abhishekyashpal/api-gitops.git
+gitops_repo_target_revision: master
+gitops_repo_path: .
+gitops_app_name: app-gitops
+gitops_repo_secret_name: app-gitops-repo
+gitops_destination_namespace: default
+gitops_create_namespace: true
+gitops_prune: true
+gitops_self_heal: true
+
 docker_users:
   - ubuntu

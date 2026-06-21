@@ -37,12 +37,6 @@ module "sg_rules" {
       cidr_blocks = ["0.0.0.0/0"]
     }
 
-    argocd = {
-      from_port   = 32080
-      to_port     = 32080
-      protocol    = "tcp"
-      cidr_blocks = ["0.0.0.0/0"]
-    }
   }
 
   egress_rules = {
@@ -64,9 +58,20 @@ module "ec2" {
   key_name      = var.key_name
   subnet_id     = var.subnet_id
 
-  security_group_ids = [module.sg.id]
+  associate_public_ip_address = false
+  security_group_ids          = [module.sg.id]
 
   name = "devops-server"
+}
+
+module "eip" {
+  source = "../../modules/eip"
+
+  instance_id = module.ec2.instance_id
+  tags = {
+    Name = "devops-server-eip"
+    Env  = "dev"
+  }
 }
 
 module "ebs" {
@@ -84,15 +89,15 @@ module "ebs" {
 resource "null_resource" "ansible_provisioner" {
   count = var.run_ansible_provisioner ? 1 : 0
 
-  depends_on = [module.ec2, module.ebs]
+  depends_on = [module.ec2, module.eip, module.ebs]
 
   triggers = {
     instance_id = module.ec2.instance_id
-    public_ip   = module.ec2.public_ip
+    public_ip   = module.eip.public_ip
   }
 
   provisioner "local-exec" {
-    command     = "bash \"${path.module}/../../scripts/wait-and-ansible.sh\" \"${module.ec2.public_ip}\" \"${var.ssh_private_key_path}\""
+    command     = "bash \"${path.module}/../../scripts/wait-and-ansible.sh\" \"${module.eip.public_ip}\" \"${var.ssh_private_key_path}\""
     interpreter = ["bash", "-c"]
   }
 }

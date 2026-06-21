@@ -29,7 +29,7 @@
   changed_when: argocd_namespace.rc == 0
 
 - name: Install ArgoCD
-  command: helm install argocd argo/argo-cd -n argocd --create-namespace
+  command: helm upgrade --install argocd argo/argo-cd -n argocd --create-namespace
   environment:
     KUBECONFIG: /etc/rancher/k3s/k3s.yaml
 
@@ -48,6 +48,65 @@
   changed_when: false
   no_log: true
   when: argocd_admin_password is defined
+
+- name: Render GitOps repository credentials
+  template:
+    src: gitops-repository-secret.yaml.j2
+    dest: /tmp/argocd-gitops-repository-secret.yaml
+    mode: "0600"
+  no_log: true
+  when:
+    - gitops_repo_url is defined
+    - gitops_repo_url | length > 0
+    - (gitops_repo_username is defined and gitops_repo_username | length > 0)
+      or (gitops_repo_password is defined and gitops_repo_password | length > 0)
+      or (gitops_repo_ssh_private_key is defined and gitops_repo_ssh_private_key | length > 0)
+
+- name: Register private GitOps repository with ArgoCD
+  command: kubectl apply -f /tmp/argocd-gitops-repository-secret.yaml
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  no_log: true
+  when:
+    - gitops_repo_url is defined
+    - gitops_repo_url | length > 0
+    - (gitops_repo_username is defined and gitops_repo_username | length > 0)
+      or (gitops_repo_password is defined and gitops_repo_password | length > 0)
+      or (gitops_repo_ssh_private_key is defined and gitops_repo_ssh_private_key | length > 0)
+
+- name: Render GitOps root application
+  template:
+    src: gitops-application.yaml.j2
+    dest: /tmp/argocd-gitops-application.yaml
+    mode: "0644"
+  when:
+    - gitops_repo_url is defined
+    - gitops_repo_url | length > 0
+
+- name: Create GitOps root application
+  command: kubectl apply -f /tmp/argocd-gitops-application.yaml
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  when:
+    - gitops_repo_url is defined
+    - gitops_repo_url | length > 0
+
+- name: Render ArgoCD ingress
+  template:
+    src: argocd-ingress.yaml.j2
+    dest: /tmp/argocd-ingress.yaml
+    mode: "0644"
+  when:
+    - argocd_domain is defined
+    - argocd_domain | length > 0
+
+- name: Create ArgoCD ingress
+  command: kubectl apply -f /tmp/argocd-ingress.yaml
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  when:
+    - argocd_domain is defined
+    - argocd_domain | length > 0
 
 - name: Patch ArgoCD admin secret with configured password
   shell: |

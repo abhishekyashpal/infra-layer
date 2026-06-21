@@ -1,0 +1,10 @@
+vpc_id            = "vpc-xxxxxxxx"
+subnet_id         = "subnet-xxxxxxxx"
+ami_id            = "ami-xxxxxxxx"
+instance_type     = "t3.large"
+key_name          = "dev-server"
+availability_zone = "us-east-1a"
+ebs_size          = 30
+
+run_ansible_provisioner = false
+ssh_private_key_path    = "~/.ssh/dev-key.pem"

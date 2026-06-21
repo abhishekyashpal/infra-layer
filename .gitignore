@@ -1,49 +1,33 @@
-# Terraform
+# Terraform local files
 .terraform/
 *.tfstate
 *.tfstate.*
+*.tfvars
+*.tfplan
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
 
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
+# Secrets / keys
+*.pem
+*.key
+.env
+.env.*
+ansible/.vault_pass
+ansible/inventory/**/group_vars/**/secrets.yaml
 
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
+# Ansible generated/local files
+ansible/inventory.ini
+*.retry
 
-# OS
+# Local docs / notes
+DEPLOYMENT.md
+
+# OS/editor
 .DS_Store
 Thumbs.db
-
-# Helm
-Chart.lock
-/charts/
-
-# Kubernetes
-kubeconfig
-.kube/
-
-# AWS
-.aws/
-*.pem
-
-# Local env files
-.env
-.env.local
-*.local.yaml
-
-# Secrets
-secrets/
-*-secret*.yaml
-ansible/.vault_pass
-.vault_pass
-
-# Temporary files
-*.tmp
-*.bak
-
-DEPLOYMENT.md
+.vscode/
+.idea/
